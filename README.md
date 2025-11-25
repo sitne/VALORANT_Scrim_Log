@@ -99,27 +99,6 @@ npm start
 - Valorantのローカルクライアントサービスが実行中であることを確認してください
 
 ### `Request failed with status code 403`
-
-- **コーチスロットではなく、プレイヤースロットで実行してください**
-- 試合に実際に参加していることを確認してください
-
-### その他の問題
-
-[Issues](https://github.com/sitne/VALORANT_Scrim_Log/issues)で報告してください。
-
-## 技術スタック
-
-- **言語**: TypeScript
-- **ランタイム**: Node.js
-- **主要ライブラリ**:
-  - [`@tqman/valorant-api-client`](https://www.npmjs.com/package/@tqman/valorant-api-client) - Valorant API クライアント
-  - [`rxjs`](https://rxjs.dev/) - リアクティブプログラミング
-  - [`ora`](https://www.npmjs.com/package/ora) - ターミナルスピナー
-
-## 貢献
-
-プルリクエストを歓迎します！大きな変更の場合は、まずissueを開いて変更内容を議論してください。
-
 ## ライセンス
 
 [MIT](LICENSE)
