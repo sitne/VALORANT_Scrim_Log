@@ -1,0 +1,50 @@
+{
+    "name": "valorant-scrim-log",
+    "version": "1.0.0",
+    "description": "Automatically save Valorant custom game (scrim) match data",
+    "main": "src/index.ts",
+    "scripts": {
+        "start": "tsx src/index.ts",
+        "build": "npm run build:bundle && npm run build:exe",
+        "build:bundle": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --external:@tqman/valorant-api-client",
+        "build:exe": "pkg dist/index.js --targets node18-win-x64 --output dist/scrim-log.exe"
+    },
+    "keywords": [
+        "valorant",
+        "scrim",
+        "esports",
+        "match-data",
+        "stats",
+        "custom-game"
+    ],
+    "author": "sitne",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sitne/scrim-log.git"
+    },
+    "bugs": {
+        "url": "https://github.com/sitne/scrim-log/issues"
+    },
+    "homepage": "https://github.com/sitne/scrim-log#readme",
+    "dependencies": {
+        "@tqman/valorant-api-client": "^1.6.0",
+        "ora": "^9.0.0",
+        "rxjs": "^7.8.1"
+    },
+    "devDependencies": {
+        "@yao-pkg/pkg": "^5.15.0",
+        "esbuild": "^0.24.0",
+        "tsx": "^4.7.1",
+        "typescript": "^5.3.3"
+    },
+    "pkg": {
+        "assets": [
+            "node_modules/@tqman/valorant-api-client/**/*"
+        ],
+        "outputPath": "dist"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}
