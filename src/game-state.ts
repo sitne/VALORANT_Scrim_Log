@@ -1,6 +1,6 @@
 import { ValorantApiClient } from "@tqman/valorant-api-client";
 import { Subject, timer, switchMap, distinctUntilChanged } from "rxjs";
-import ora from "ora"; // 追加
+import ora from "ora";
 
 export type GameState = "MENUS" | "PREGAME" | "INGAME";
 export type GameStateData = { state: GameState; matchId?: string };
@@ -14,7 +14,7 @@ export class GameStateMonitor {
         // ループの外でスピナーを初期化・開始
         const spinner = ora('Initializing monitor...').start();
 
-        timer(0, 1000)
+        timer(0, 5000) // 1秒 -> 5秒に変更 (負荷軽減)
             .pipe(
                 switchMap(async (): Promise<GameStateData> => {
                     try {
@@ -22,8 +22,6 @@ export class GameStateMonitor {
                         const myPresence = presences.find(p => p.puuid === this.client.remote.puuid);
 
                         if (!myPresence) {
-                            // console.logの代わりにspinnerのテキストを更新
-                            spinner.text = "My presence not found";
                             return { state: "MENUS" };
                         }
 
@@ -50,21 +48,19 @@ export class GameStateMonitor {
                             matchId = privateData.matchId;
                         }
 
-                        // 【修正箇所】ここを console.log から spinner.text への代入に変更
-                        spinner.text = `Resolved Loop State: ${loopState}, Match ID: ${matchId || 'None'}`;
-
                         return {
                             state: (loopState as GameState) || "MENUS",
                             matchId
                         };
                     } catch (e) {
-                        spinner.text = "Error polling presence";
                         return { state: "MENUS" };
                     }
                 }),
                 distinctUntilChanged((prev, curr) => prev.state === curr.state && prev.matchId === curr.matchId)
             )
             .subscribe(data => {
+                // 状態が変わった時だけ表示を更新
+                spinner.text = `[MONITOR] State: ${data.state} | Match ID: ${data.matchId || 'None'}`;
                 this.state$.next(data);
             });
     }

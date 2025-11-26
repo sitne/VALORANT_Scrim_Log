@@ -1,6 +1,7 @@
 import { ValorantApiClient } from "@tqman/valorant-api-client";
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
+import ora from "ora";
 
 export class MatchFetcher {
     private lastMatchId: string | null = null;
@@ -34,7 +35,7 @@ export class MatchFetcher {
         const matchId = this.lastMatchId;
         this.lastMatchId = null; // Reset
 
-        console.log(`[GAME END] Fetching match data for ${matchId}...`);
+        const spinner = ora(`[GAME END] Fetching match data for ${matchId}...`).start();
 
         // リトライ処理（長い試合はサーバー処理に時間がかかる）
         const maxRetries = 5;
@@ -43,7 +44,7 @@ export class MatchFetcher {
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             await new Promise(resolve => setTimeout(resolve, delays[attempt]));
 
-            console.log(`[ATTEMPT ${attempt + 1}/${maxRetries}] Fetching...`);
+            spinner.text = `[ATTEMPT ${attempt + 1}/${maxRetries}] Fetching match data...`;
 
             try {
                 const { data } = await this.client.remote.getMatchDetails({
@@ -54,7 +55,7 @@ export class MatchFetcher {
                 mkdirSync("output", { recursive: true });
                 writeFileSync(join("output", fileName), JSON.stringify(data, null, 2));
 
-                console.log(`\n✅ [SUCCESS] Match data saved to output/${fileName}`);
+                spinner.succeed(`[SUCCESS] Match data saved to output/${fileName} (Retrieved on attempt ${attempt + 1}/${maxRetries})`);
                 return; // 成功したら終了
             } catch (e: any) {
                 if (e.response) {
@@ -62,21 +63,22 @@ export class MatchFetcher {
 
                     if (status === 400) {
                         if (attempt < maxRetries - 1) {
-                            console.log(`⏳ Match data not ready yet. Retrying in ${delays[attempt + 1] / 1000}s...`);
+                            spinner.text = `⏳ Match data not ready yet. Retrying in ${delays[attempt + 1] / 1000}s...`;
                         } else {
-                            console.error(`\n❌ Failed to fetch match after ${maxRetries} attempts.`);
-                            console.error("Possible reasons:");
+                            spinner.fail(`Failed to fetch match after ${maxRetries} attempts.`);
+                            console.error("\nPossible reasons:");
                             console.error("  - Custom game with 'Do not record match history' setting");
                             console.error("  - Match data may take longer to process (try again later)");
                         }
                     } else if (status === 403) {
-                        console.error(`\n❌ Access denied (403). Please run as a player, not as a coach.`);
+                        spinner.fail(`Access denied (403).`);
+                        console.error(`  - Please run as a player, not as a coach.`);
                         return; // 403はリトライしても無駄なので終了
                     } else {
-                        console.error(`\n❌ Unexpected error: ${status}`);
+                        spinner.fail(`Unexpected error: ${status}`);
                     }
                 } else {
-                    console.error(`\n❌ Network error:`, e.message);
+                    spinner.fail(`Network error: ${e.message}`);
                 }
             }
         }
