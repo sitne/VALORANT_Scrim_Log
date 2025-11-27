@@ -38,8 +38,12 @@ export class MatchFetcher {
         const spinner = ora(`[GAME END] Fetching match data for ${matchId}...`).start();
 
         // リトライ処理（長い試合はサーバー処理に時間がかかる）
-        const maxRetries = 5;
-        const delays = [5000, 10000, 15000, 20000, 30000]; // 5秒, 10秒, 15秒, 20秒, 30秒
+        // 5v5のフルマッチでは処理に時間がかかるため、最大約4分間待機するように拡張
+        const delays = [
+            5000, 10000, 15000, 20000, 30000, // 最初は徐々に間隔をあける (計80秒)
+            30000, 30000, 30000, 30000, 30000 // その後は30秒おきに5回 (計150秒) -> 合計約230秒
+        ];
+        const maxRetries = delays.length;
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             await new Promise(resolve => setTimeout(resolve, delays[attempt]));
@@ -69,6 +73,10 @@ export class MatchFetcher {
                             console.error("\nPossible reasons:");
                             console.error("  - Custom game with 'Do not record match history' setting");
                             console.error("  - Match data may take longer to process (try again later)");
+                            // 詳細なエラー内容を表示
+                            if (e.response.data) {
+                                console.error("\n[DEBUG] Error Response Data:", JSON.stringify(e.response.data, null, 2));
+                            }
                         }
                     } else if (status === 403) {
                         spinner.fail(`Access denied (403).`);
