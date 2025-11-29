@@ -1,4 +1,5 @@
 import { ValorantApiClient } from "@tqman/valorant-api-client";
+import { createClient } from "./connection";
 import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import ora from "ora";
@@ -16,8 +17,9 @@ export class MatchFetcher {
         }
 
         try {
-            const { data } = await this.client.remote.getCurrentGamePlayer({
-                data: { puuid: this.client.remote.puuid }
+            const client = await createClient();
+            const { data } = await client.remote.getCurrentGamePlayer({
+                data: { puuid: client.remote.puuid }
             });
             this.lastMatchId = data.MatchID;
             console.log(`[INGAME] Captured Match ID from API: ${this.lastMatchId}`);
@@ -51,7 +53,8 @@ export class MatchFetcher {
             spinner.text = `[ATTEMPT ${attempt + 1}/${maxRetries}] Fetching match data...`;
 
             try {
-                const { data } = await this.client.remote.getMatchDetails({
+                const client = await createClient();
+                const { data } = await client.remote.getMatchDetails({
                     data: { matchId }
                 });
 
